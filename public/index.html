@@ -579,6 +579,13 @@
       font-size: 0.75rem;
     }
 
+    .response-actions {
+      display: none;
+      gap: 0.35rem;
+    }
+
+    .response-actions.visible { display: flex; }
+
     .download-btn {
       padding: 0.35rem 0.85rem;
       background: #d97706;
@@ -588,11 +595,9 @@
       font-size: 0.8rem;
       cursor: pointer;
       transition: background 0.15s;
-      display: none;
     }
 
     .download-btn:hover { background: #b45309; }
-    .download-btn.visible { display: inline-block; }
 
     .progress-bar-track {
       height: 3px;
@@ -693,7 +698,11 @@
           <span id="statusText">Ready</span>
           <span class="char-count" id="charCount"></span>
         </div>
-        <button class="download-btn" id="downloadBtn">Download .md</button>
+        <div class="response-actions" id="responseActions">
+          <button class="download-btn" id="copyResponseBtn">Copy</button>
+          <button class="download-btn" id="downloadBtn">Download .md</button>
+          <button class="download-btn" id="downloadTxtBtn">Download .txt</button>
+        </div>
       </div>
       <div class="progress-bar-track hidden" id="progressTrack">
         <div class="progress-bar-fill" id="progressFill"></div>
@@ -827,6 +836,13 @@
       addFiles(e.dataTransfer.files);
     });
 
+    // Copy response
+    document.getElementById('copyResponseBtn').addEventListener('click', async () => {
+      const text = document.getElementById('response').textContent;
+      await navigator.clipboard.writeText(text);
+      showToast('Response copied to clipboard');
+    });
+
     // Download .md
     document.getElementById('downloadBtn').addEventListener('click', () => {
       const text = document.getElementById('response').textContent;
@@ -835,6 +851,18 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = 'response.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Download .txt
+    document.getElementById('downloadTxtBtn').addEventListener('click', () => {
+      const text = document.getElementById('response').textContent;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'response.txt';
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -1020,12 +1048,12 @@
       const charCount = document.getElementById('charCount');
       const progressTrack = document.getElementById('progressTrack');
       const progressFill = document.getElementById('progressFill');
-      const downloadBtn = document.getElementById('downloadBtn');
+      const responseActions = document.getElementById('responseActions');
 
       submitBtn.disabled = true;
       responseDiv.textContent = '';
       wrapper.classList.add('visible');
-      downloadBtn.classList.remove('visible');
+      responseActions.classList.remove('visible');
       statusText.innerHTML = '<span class="spinner"></span> Generating response...';
       charCount.textContent = '';
       progressTrack.classList.remove('hidden');
@@ -1091,7 +1119,7 @@
               progressFill.style.width = '100%';
               statusText.textContent = `Done — ${data.usage.input_tokens.toLocaleString()} input / ${data.usage.output_tokens.toLocaleString()} output tokens`;
               charCount.textContent = `${totalChars.toLocaleString()} chars · ${elapsed}s`;
-              downloadBtn.classList.add('visible');
+              responseActions.classList.add('visible');
               setTimeout(() => { progressTrack.classList.add('hidden'); }, 500);
             }
           }
