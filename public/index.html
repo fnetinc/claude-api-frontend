@@ -179,6 +179,297 @@
     .submit-btn:hover { background: #b45309; }
     .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
+    /* --- Notes Section --- */
+    .notes-section {
+      margin-top: 2rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #e8e8e8;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .notes-header h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .notes-header .toggle-arrow {
+      font-size: 0.75rem;
+      color: #888;
+      transition: transform 0.2s;
+    }
+
+    .notes-header .toggle-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    .notes-body {
+      display: none;
+      padding: 1rem;
+    }
+
+    .notes-body.open {
+      display: block;
+    }
+
+    .notes-toolbar {
+      margin-bottom: 1rem;
+    }
+
+    .add-note-btn {
+      padding: 0.4rem 1rem;
+      background: #d97706;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .add-note-btn:hover { background: #b45309; }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .note-card {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .note-card:hover {
+      border-color: #bbb;
+    }
+
+    .note-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.85rem;
+      background: #fafafa;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .note-title {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #333;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 0.35rem;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+    }
+
+    .note-action-btn {
+      padding: 0.25rem 0.55rem;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #666;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .note-action-btn:hover {
+      border-color: #999;
+      color: #333;
+    }
+
+    .note-action-btn.delete:hover {
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+
+    .note-action-btn.copy:hover {
+      border-color: #16a34a;
+      color: #16a34a;
+    }
+
+    .note-content-preview {
+      padding: 0.6rem 0.85rem;
+      font-size: 0.8rem;
+      color: #777;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 80px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .note-card.expanded .note-content-preview {
+      display: block;
+      max-height: none;
+    }
+
+    /* Note edit modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 700px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { color: #333; }
+
+    .modal-body {
+      padding: 1.25rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-body label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 0.3rem;
+    }
+
+    .modal-body input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #1a1a1a;
+      margin-bottom: 1rem;
+    }
+
+    .modal-body input[type="text"]:focus {
+      outline: none;
+      border-color: #d97706;
+    }
+
+    .modal-body textarea {
+      min-height: 250px;
+      margin-bottom: 0;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #eee;
+    }
+
+    .modal-cancel-btn {
+      padding: 0.5rem 1.25rem;
+      background: #fff;
+      color: #666;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .modal-cancel-btn:hover { border-color: #999; color: #333; }
+
+    .modal-save-btn {
+      padding: 0.5rem 1.25rem;
+      background: #d97706;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .modal-save-btn:hover { background: #b45309; }
+
+    .notes-empty {
+      text-align: center;
+      color: #aaa;
+      font-size: 0.85rem;
+      padding: 1.5rem 0;
+    }
+
+    .copied-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 2000;
+      pointer-events: none;
+    }
+
+    .copied-toast.visible { opacity: 1; }
+
+    /* --- Response Section --- */
     .response-wrapper {
       margin-top: 2rem;
       display: none;
@@ -295,6 +586,23 @@
 
     <button class="submit-btn" id="submitBtn">Submit</button>
 
+    <!-- Notes Section -->
+    <div class="notes-section">
+      <div class="notes-header" id="notesToggle">
+        <h2>Saved Notes / Scripts</h2>
+        <span class="toggle-arrow" id="toggleArrow">&#9660;</span>
+      </div>
+      <div class="notes-body" id="notesBody">
+        <div class="notes-toolbar">
+          <button class="add-note-btn" id="addNoteBtn">+ New Note</button>
+        </div>
+        <div class="notes-list" id="notesList">
+          <div class="notes-empty" id="notesEmpty">No saved notes yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Response Section -->
     <div class="response-wrapper" id="responseWrapper">
       <div class="status-bar">
         <div class="left">
@@ -309,6 +617,29 @@
       <div class="response-area" id="response"></div>
     </div>
   </div>
+
+  <!-- Edit/Create Note Modal -->
+  <div class="modal-overlay" id="noteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">New Note</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="noteTitle">Title</label>
+        <input type="text" id="noteTitle" placeholder="Note title...">
+        <label for="noteContent">Content</label>
+        <textarea id="noteContent" placeholder="Paste your script or note here..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-cancel-btn" id="modalCancel">Cancel</button>
+        <button class="modal-save-btn" id="modalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copied toast -->
+  <div class="copied-toast" id="copiedToast">Copied to clipboard</div>
 
   <script>
     // Logout
@@ -352,7 +683,6 @@
         reader.onload = (ev) => {
           const img = document.createElement('img');
           img.src = ev.target.result;
-          // Remove old img if exists
           const old = slot.querySelector('img');
           if (old) old.remove();
           slot.insertBefore(img, removeBtn);
@@ -385,7 +715,165 @@
       URL.revokeObjectURL(url);
     });
 
-    // Submit
+    // ==================== NOTES ====================
+    const notesToggle = document.getElementById('notesToggle');
+    const notesBody = document.getElementById('notesBody');
+    const toggleArrow = document.getElementById('toggleArrow');
+    const notesList = document.getElementById('notesList');
+    const notesEmpty = document.getElementById('notesEmpty');
+    const noteModal = document.getElementById('noteModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const noteTitleInput = document.getElementById('noteTitle');
+    const noteContentInput = document.getElementById('noteContent');
+    const copiedToast = document.getElementById('copiedToast');
+
+    let editingNoteId = null;
+
+    // Toggle notes panel
+    notesToggle.addEventListener('click', () => {
+      notesBody.classList.toggle('open');
+      toggleArrow.classList.toggle('open');
+    });
+
+    // Open modal for new note
+    document.getElementById('addNoteBtn').addEventListener('click', () => {
+      editingNoteId = null;
+      modalTitle.textContent = 'New Note';
+      noteTitleInput.value = '';
+      noteContentInput.value = '';
+      noteModal.classList.add('visible');
+      noteTitleInput.focus();
+    });
+
+    // Close modal
+    function closeModal() {
+      noteModal.classList.remove('visible');
+      editingNoteId = null;
+    }
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    noteModal.addEventListener('click', (e) => {
+      if (e.target === noteModal) closeModal();
+    });
+
+    // Save note
+    document.getElementById('modalSave').addEventListener('click', async () => {
+      const title = noteTitleInput.value.trim() || 'Untitled';
+      const content = noteContentInput.value;
+
+      if (editingNoteId) {
+        await fetch(`/api/notes/${editingNoteId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content }),
+        });
+      } else {
+        await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content }),
+        });
+      }
+
+      closeModal();
+      loadNotes();
+    });
+
+    // Show toast
+    function showToast(msg) {
+      copiedToast.textContent = msg;
+      copiedToast.classList.add('visible');
+      setTimeout(() => copiedToast.classList.remove('visible'), 1500);
+    }
+
+    // Render notes
+    function renderNotes(notes) {
+      // Clear existing cards
+      notesList.querySelectorAll('.note-card').forEach(c => c.remove());
+
+      if (notes.length === 0) {
+        notesEmpty.style.display = 'block';
+        return;
+      }
+      notesEmpty.style.display = 'none';
+
+      notes.forEach(note => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.dataset.id = note.id;
+
+        const preview = note.content.length > 200
+          ? note.content.substring(0, 200) + '...'
+          : note.content;
+
+        card.innerHTML = `
+          <div class="note-card-header">
+            <span class="note-title">${escapeHtml(note.title)}</span>
+            <div class="note-actions">
+              <button class="note-action-btn copy" title="Copy content">Copy</button>
+              <button class="note-action-btn edit" title="Edit note">Edit</button>
+              <button class="note-action-btn delete" title="Delete note">Delete</button>
+            </div>
+          </div>
+          <div class="note-content-preview">${escapeHtml(note.content)}</div>
+        `;
+
+        // Toggle expand
+        card.querySelector('.note-card-header').addEventListener('click', (e) => {
+          if (e.target.closest('.note-actions')) return;
+          card.classList.toggle('expanded');
+        });
+
+        // Copy
+        card.querySelector('.copy').addEventListener('click', async () => {
+          await navigator.clipboard.writeText(note.content);
+          showToast('Copied to clipboard');
+        });
+
+        // Edit
+        card.querySelector('.edit').addEventListener('click', () => {
+          editingNoteId = note.id;
+          modalTitle.textContent = 'Edit Note';
+          noteTitleInput.value = note.title;
+          noteContentInput.value = note.content;
+          noteModal.classList.add('visible');
+          noteTitleInput.focus();
+        });
+
+        // Delete
+        card.querySelector('.delete').addEventListener('click', async () => {
+          if (!confirm(`Delete "${note.title}"?`)) return;
+          await fetch(`/api/notes/${note.id}`, { method: 'DELETE' });
+          loadNotes();
+        });
+
+        notesList.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Load notes from API
+    async function loadNotes() {
+      try {
+        const resp = await fetch('/api/notes');
+        if (resp.ok) {
+          const notes = await resp.json();
+          renderNotes(notes);
+        }
+      } catch (err) {
+        console.error('Failed to load notes:', err);
+      }
+    }
+
+    // Load notes on page load
+    loadNotes();
+
+    // ==================== SUBMIT ====================
     document.getElementById('submitBtn').addEventListener('click', async () => {
       const prompt = document.getElementById('prompt').value.trim();
       if (!prompt) return;
@@ -459,7 +947,6 @@
               totalChars += data.text.length;
               const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
               charCount.textContent = `${totalChars.toLocaleString()} chars · ${elapsed}s`;
-              // Estimate progress (assuming ~30k char max)
               const pct = Math.min(95, (totalChars / 30000) * 100);
               progressFill.style.width = pct + '%';
             }

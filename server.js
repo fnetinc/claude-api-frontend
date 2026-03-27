@@ -3,11 +3,30 @@ import express from "express";
 import multer from "multer";
 import cookieParser from "cookie-parser";
 import crypto from "crypto";
+import Database from "better-sqlite3";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// SQLite database — use RAILWAY_VOLUME_MOUNT_PATH if available for persistence
+const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? join(process.env.RAILWAY_VOLUME_MOUNT_PATH, "notes.db")
+  : join(__dirname, "notes.db");
+const db = new Database(dbPath);
+db.pragma("journal_mode = WAL");
+
+// Create notes table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL DEFAULT 'Untitled',
+    content TEXT NOT NULL DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  )
+`);
 
 const app = express();
 const upload = multer({
@@ -108,6 +127,40 @@ app.use((req, res, next) => {
   if (req.path === "/login.html") return next();
   requireAuth(req, res, next);
 }, express.static(join(__dirname, "public")));
+
+// --- Notes CRUD API ---
+app.get("/api/notes", requireAuth, (req, res) => {
+  const notes = db.prepare("SELECT * FROM notes ORDER BY updated_at DESC").all();
+  res.json(notes);
+});
+
+app.post("/api/notes", requireAuth, (req, res) => {
+  const { title, content } = req.body;
+  const result = db.prepare("INSERT INTO notes (title, content) VALUES (?, ?)").run(
+    title || "Untitled",
+    content || ""
+  );
+  const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(result.lastInsertRowid);
+  res.json(note);
+});
+
+app.put("/api/notes/:id", requireAuth, (req, res) => {
+  const { title, content } = req.body;
+  const { id } = req.params;
+  db.prepare("UPDATE notes SET title = ?, content = ?, updated_at = datetime('now') WHERE id = ?").run(
+    title, content, id
+  );
+  const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(id);
+  if (!note) return res.status(404).json({ error: "Note not found" });
+  res.json(note);
+});
+
+app.delete("/api/notes/:id", requireAuth, (req, res) => {
+  const { id } = req.params;
+  const result = db.prepare("DELETE FROM notes WHERE id = ?").run(id);
+  if (result.changes === 0) return res.status(404).json({ error: "Note not found" });
+  res.json({ success: true });
+});
 
 app.post("/api/chat", requireAuth, upload.array("images", 5), async (req, res) => {
   try {
