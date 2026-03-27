@@ -1,0 +1,15 @@
+{
+  "name": "claude-api-frontend",
+  "version": "1.0.0",
+  "description": "Web frontend for Claude API with image support",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1"
+  }
+}
