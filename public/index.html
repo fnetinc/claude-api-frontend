@@ -331,7 +331,7 @@
       flex: 1;
       font-size: 0.8rem;
       font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      color: #333;
+      color: #000;
       background: #f0f0f0;
       padding: 0.5rem 0.65rem;
       border-radius: 4px;
@@ -357,7 +357,7 @@
 
     .note-notes-text {
       font-size: 0.8rem;
-      color: #777;
+      color: #000;
       white-space: pre-wrap;
       word-wrap: break-word;
     }
@@ -865,12 +865,13 @@
             </div>
           </div>
           <div class="note-expanded">
+            ${notesHtml}
+            ${notesHtml ? '<div style="margin-bottom: 0.5rem;"></div>' : ''}
             <div class="note-field-label">Command</div>
             <div class="note-command-row">
               <div class="note-command-text">${escapeHtml(note.command || '')}</div>
               <button class="copy-command-btn">Copy</button>
             </div>
-            ${notesHtml}
           </div>
         `;
 
