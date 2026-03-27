@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import express from "express";
 import multer from "multer";
+import cookieParser from "cookie-parser";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -15,10 +17,98 @@ const upload = multer({
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-app.use(express.static(join(__dirname, "public")));
+// Auth config — set LOGIN_PASSWORD env var on Railway
+const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD || "changeme";
+
+// In-memory session store (tokens mapped to expiry timestamps)
+const sessions = new Map();
+
+function createSession(rememberMe) {
+  const token = crypto.randomBytes(32).toString("hex");
+  const maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000; // 30 days or 1 day
+  sessions.set(token, Date.now() + maxAge);
+  return { token, maxAge };
+}
+
+function isValidSession(token) {
+  if (!token || !sessions.has(token)) return false;
+  if (Date.now() > sessions.get(token)) {
+    sessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
+// Cleanup expired sessions every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, expiry] of sessions) {
+    if (now > expiry) sessions.delete(token);
+  }
+}, 60 * 60 * 1000);
+
+app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 
-app.post("/api/chat", upload.array("images", 5), async (req, res) => {
+// Auth middleware — protect everything except login routes and static login page
+function requireAuth(req, res, next) {
+  if (isValidSession(req.cookies.session)) {
+    return next();
+  }
+  // For API calls, return 401
+  if (req.path.startsWith("/api/")) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  // For page requests, redirect to login
+  return res.redirect("/login.html");
+}
+
+// Login API
+app.post("/api/login", (req, res) => {
+  const { password, remember } = req.body;
+  if (password === LOGIN_PASSWORD) {
+    const rememberMe = remember === "on" || remember === "true";
+    const { token, maxAge } = createSession(rememberMe);
+    res.cookie("session", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge,
+      secure: process.env.NODE_ENV === "production",
+    });
+    return res.json({ success: true });
+  }
+  return res.status(401).json({ error: "Invalid password" });
+});
+
+// Logout
+app.post("/api/logout", (req, res) => {
+  const token = req.cookies.session;
+  if (token) sessions.delete(token);
+  res.clearCookie("session");
+  res.json({ success: true });
+});
+
+// Serve login page without auth
+app.get("/login.html", (req, res) => {
+  // If already logged in, redirect to app
+  if (isValidSession(req.cookies.session)) {
+    return res.redirect("/");
+  }
+  res.sendFile(join(__dirname, "public", "login.html"));
+});
+
+// Protect all other routes
+app.get("/", requireAuth, (req, res) => {
+  res.sendFile(join(__dirname, "public", "index.html"));
+});
+
+// Serve static files with auth (except login.html)
+app.use((req, res, next) => {
+  if (req.path === "/login.html") return next();
+  requireAuth(req, res, next);
+}, express.static(join(__dirname, "public")));
+
+app.post("/api/chat", requireAuth, upload.array("images", 5), async (req, res) => {
   try {
     const { prompt, model } = req.body;
 

@@ -22,11 +22,33 @@
       max-width: 900px;
     }
 
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
-      margin-bottom: 1.5rem;
       color: #111;
+    }
+
+    .logout-btn {
+      padding: 0.4rem 0.9rem;
+      background: none;
+      color: #888;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .logout-btn:hover {
+      color: #dc2626;
+      border-color: #dc2626;
     }
 
     .model-selector {
@@ -257,7 +279,10 @@
 </head>
 <body>
   <div class="container">
-    <h1>Claude API</h1>
+    <div class="header">
+      <h1>Claude API</h1>
+      <button class="logout-btn" id="logoutBtn">Log Out</button>
+    </div>
 
     <div class="model-selector">
       <button class="model-btn active" data-model="sonnet">Sonnet</button>
@@ -286,6 +311,12 @@
   </div>
 
   <script>
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
     let selectedModel = 'sonnet';
     const imageFiles = [null, null, null, null, null];
 
