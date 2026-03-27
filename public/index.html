@@ -157,38 +157,99 @@
     .submit-btn:hover { background: #b45309; }
     .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-    .response-area {
+    .response-wrapper {
       margin-top: 2rem;
+      display: none;
+    }
+
+    .response-wrapper.visible { display: block; }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #e8e8e8;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .status-bar .left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-bar .char-count {
+      color: #999;
+      font-size: 0.75rem;
+    }
+
+    .download-btn {
+      padding: 0.35rem 0.85rem;
+      background: #d97706;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: none;
+    }
+
+    .download-btn:hover { background: #b45309; }
+    .download-btn.visible { display: inline-block; }
+
+    .progress-bar-track {
+      height: 3px;
+      background: #ddd;
+      overflow: hidden;
+    }
+
+    .progress-bar-track.hidden { display: none; }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #d97706;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar-fill.indeterminate {
+      width: 30%;
+      animation: indeterminate 1.5s ease-in-out infinite;
+    }
+
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+
+    .response-area {
       background: #fff;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
       padding: 1.25rem;
       min-height: 100px;
       white-space: pre-wrap;
       word-wrap: break-word;
       font-size: 0.95rem;
       line-height: 1.6;
-      display: none;
-    }
-
-    .response-area.visible { display: block; }
-
-    .status {
-      margin-top: 0.75rem;
-      font-size: 0.8rem;
-      color: #888;
     }
 
     .spinner {
       display: inline-block;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border: 2px solid #ccc;
       border-top-color: #d97706;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
       vertical-align: middle;
-      margin-right: 0.4rem;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -209,8 +270,19 @@
 
     <button class="submit-btn" id="submitBtn">Submit</button>
 
-    <div class="response-area" id="response"></div>
-    <div class="status" id="status"></div>
+    <div class="response-wrapper" id="responseWrapper">
+      <div class="status-bar">
+        <div class="left">
+          <span id="statusText">Ready</span>
+          <span class="char-count" id="charCount"></span>
+        </div>
+        <button class="download-btn" id="downloadBtn">Download .md</button>
+      </div>
+      <div class="progress-bar-track hidden" id="progressTrack">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="response-area" id="response"></div>
+    </div>
   </div>
 
   <script>
@@ -270,6 +342,18 @@
       imageArea.appendChild(slot);
     }
 
+    // Download .md
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const text = document.getElementById('response').textContent;
+      const blob = new Blob([text], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'response.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
     // Submit
     document.getElementById('submitBtn').addEventListener('click', async () => {
       const prompt = document.getElementById('prompt').value.trim();
@@ -277,12 +361,25 @@
 
       const submitBtn = document.getElementById('submitBtn');
       const responseDiv = document.getElementById('response');
-      const statusDiv = document.getElementById('status');
+      const wrapper = document.getElementById('responseWrapper');
+      const statusText = document.getElementById('statusText');
+      const charCount = document.getElementById('charCount');
+      const progressTrack = document.getElementById('progressTrack');
+      const progressFill = document.getElementById('progressFill');
+      const downloadBtn = document.getElementById('downloadBtn');
 
       submitBtn.disabled = true;
       responseDiv.textContent = '';
-      responseDiv.classList.add('visible');
-      statusDiv.innerHTML = '<span class="spinner"></span> Waiting for response...';
+      wrapper.classList.add('visible');
+      downloadBtn.classList.remove('visible');
+      statusText.innerHTML = '<span class="spinner"></span> Generating response...';
+      charCount.textContent = '';
+      progressTrack.classList.remove('hidden');
+      progressFill.className = 'progress-bar-fill indeterminate';
+      progressFill.style.width = '';
+
+      const startTime = Date.now();
+      let totalChars = 0;
 
       const formData = new FormData();
       formData.append('prompt', prompt);
@@ -302,6 +399,9 @@
           const err = await resp.json();
           throw new Error(err.error || 'Request failed');
         }
+
+        // Switch from indeterminate to determinate progress
+        progressFill.classList.remove('indeterminate');
 
         const reader = resp.body.getReader();
         const decoder = new TextDecoder();
@@ -325,16 +425,29 @@
 
             if (data.text) {
               responseDiv.textContent += data.text;
+              totalChars += data.text.length;
+              const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+              charCount.textContent = `${totalChars.toLocaleString()} chars · ${elapsed}s`;
+              // Estimate progress (assuming ~30k char max)
+              const pct = Math.min(95, (totalChars / 30000) * 100);
+              progressFill.style.width = pct + '%';
             }
 
             if (data.done) {
-              statusDiv.textContent = `Done — ${data.usage.input_tokens} input / ${data.usage.output_tokens} output tokens`;
+              const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+              progressFill.style.width = '100%';
+              statusText.textContent = `Done — ${data.usage.input_tokens.toLocaleString()} input / ${data.usage.output_tokens.toLocaleString()} output tokens`;
+              charCount.textContent = `${totalChars.toLocaleString()} chars · ${elapsed}s`;
+              downloadBtn.classList.add('visible');
+              setTimeout(() => { progressTrack.classList.add('hidden'); }, 500);
             }
           }
         }
       } catch (err) {
-        statusDiv.textContent = '';
+        statusText.textContent = 'Error';
+        charCount.textContent = '';
         responseDiv.textContent = 'Error: ' + err.message;
+        progressTrack.classList.add('hidden');
       } finally {
         submitBtn.disabled = false;
       }
