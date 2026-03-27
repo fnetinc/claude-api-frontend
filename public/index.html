@@ -197,6 +197,21 @@
     .submit-btn:hover { background: #b45309; }
     .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
+    .reset-btn {
+      padding: 0.65rem 2rem;
+      background: #fff;
+      color: #666;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-left: 0.5rem;
+      transition: all 0.15s;
+    }
+
+    .reset-btn:hover { border-color: #999; color: #333; }
+
     /* --- Notes Section --- */
     .notes-section {
       margin-top: 2rem;
@@ -653,6 +668,7 @@
     </div>
 
     <button class="submit-btn" id="submitBtn">Submit</button>
+    <button class="reset-btn" id="resetBtn">Reset</button>
 
     <!-- Notes Section -->
     <div class="notes-section">
@@ -716,6 +732,17 @@
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/logout', { method: 'POST' });
       window.location.href = '/login.html';
+    });
+
+    // Reset
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('prompt').value = '';
+      imageFiles = [];
+      document.getElementById('imageThumbs').innerHTML = '';
+      document.getElementById('imageCount').textContent = '';
+      document.getElementById('responseWrapper').classList.remove('visible');
+      document.getElementById('response').textContent = '';
+      document.getElementById('fileInput').value = '';
     });
 
     let selectedModel = 'sonnet';
