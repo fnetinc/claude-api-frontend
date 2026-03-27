@@ -9,8 +9,8 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f0f0f;
-      color: #e0e0e0;
+      background: #f5f5f5;
+      color: #1a1a1a;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -26,7 +26,7 @@
       font-size: 1.5rem;
       font-weight: 600;
       margin-bottom: 1.5rem;
-      color: #fff;
+      color: #111;
     }
 
     .model-selector {
@@ -37,9 +37,9 @@
 
     .model-btn {
       padding: 0.5rem 1.25rem;
-      border: 1px solid #333;
-      background: #1a1a1a;
-      color: #999;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #666;
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.875rem;
@@ -53,17 +53,17 @@
     }
 
     .model-btn:hover:not(.active) {
-      border-color: #555;
-      color: #ccc;
+      border-color: #999;
+      color: #333;
     }
 
     textarea {
       width: 100%;
       min-height: 160px;
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: #fff;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      color: #e0e0e0;
+      color: #1a1a1a;
       padding: 1rem;
       font-size: 0.95rem;
       font-family: inherit;
@@ -86,7 +86,7 @@
     .image-slot {
       width: 100px;
       height: 100px;
-      border: 2px dashed #333;
+      border: 2px dashed #ccc;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -98,7 +98,7 @@
       flex-shrink: 0;
     }
 
-    .image-slot:hover { border-color: #555; }
+    .image-slot:hover { border-color: #999; }
 
     .image-slot input {
       position: absolute;
@@ -109,7 +109,7 @@
 
     .image-slot .plus {
       font-size: 1.5rem;
-      color: #555;
+      color: #aaa;
       pointer-events: none;
     }
 
@@ -155,12 +155,12 @@
     }
 
     .submit-btn:hover { background: #b45309; }
-    .submit-btn:disabled { background: #555; cursor: not-allowed; }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
     .response-area {
       margin-top: 2rem;
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: #fff;
+      border: 1px solid #ccc;
       border-radius: 8px;
       padding: 1.25rem;
       min-height: 100px;
@@ -176,14 +176,14 @@
     .status {
       margin-top: 0.75rem;
       font-size: 0.8rem;
-      color: #777;
+      color: #888;
     }
 
     .spinner {
       display: inline-block;
       width: 14px;
       height: 14px;
-      border: 2px solid #555;
+      border: 2px solid #ccc;
       border-top-color: #d97706;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
