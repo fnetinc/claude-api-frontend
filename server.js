@@ -22,11 +22,24 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL DEFAULT 'Untitled',
-    content TEXT NOT NULL DEFAULT '',
+    command TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   )
 `);
+
+// Migrate: add command/notes columns if upgrading from old schema
+try {
+  db.exec(`ALTER TABLE notes ADD COLUMN command TEXT NOT NULL DEFAULT ''`);
+} catch (e) { /* column already exists */ }
+try {
+  db.exec(`ALTER TABLE notes ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
+} catch (e) { /* column already exists */ }
+// Migrate old content column to command if it exists
+try {
+  db.exec(`UPDATE notes SET command = content WHERE command = '' AND content != ''`);
+} catch (e) { /* no content column */ }
 
 const app = express();
 const upload = multer({
@@ -135,20 +148,21 @@ app.get("/api/notes", requireAuth, (req, res) => {
 });
 
 app.post("/api/notes", requireAuth, (req, res) => {
-  const { title, content } = req.body;
-  const result = db.prepare("INSERT INTO notes (title, content) VALUES (?, ?)").run(
+  const { title, command, notes } = req.body;
+  const result = db.prepare("INSERT INTO notes (title, command, notes) VALUES (?, ?, ?)").run(
     title || "Untitled",
-    content || ""
+    command || "",
+    notes || ""
   );
   const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(result.lastInsertRowid);
   res.json(note);
 });
 
 app.put("/api/notes/:id", requireAuth, (req, res) => {
-  const { title, content } = req.body;
+  const { title, command, notes } = req.body;
   const { id } = req.params;
-  db.prepare("UPDATE notes SET title = ?, content = ?, updated_at = datetime('now') WHERE id = ?").run(
-    title, content, id
+  db.prepare("UPDATE notes SET title = ?, command = ?, notes = ?, updated_at = datetime('now') WHERE id = ?").run(
+    title, command, notes, id
   );
   const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(id);
   if (!note) return res.status(404).json({ error: "Note not found" });

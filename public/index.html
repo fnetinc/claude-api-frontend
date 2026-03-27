@@ -310,20 +310,65 @@
       color: #16a34a;
     }
 
-    .note-content-preview {
+    .note-expanded {
+      display: none;
       padding: 0.6rem 0.85rem;
+      border-top: 1px solid #eee;
+    }
+
+    .note-card.expanded .note-expanded {
+      display: block;
+    }
+
+    .note-command-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .note-command-text {
+      flex: 1;
+      font-size: 0.8rem;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      color: #333;
+      background: #f0f0f0;
+      padding: 0.5rem 0.65rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .copy-command-btn {
+      padding: 0.3rem 0.6rem;
+      background: #d97706;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .copy-command-btn:hover { background: #b45309; }
+
+    .note-notes-text {
       font-size: 0.8rem;
       color: #777;
       white-space: pre-wrap;
       word-wrap: break-word;
-      max-height: 80px;
-      overflow: hidden;
-      display: none;
     }
 
-    .note-card.expanded .note-content-preview {
-      display: block;
-      max-height: none;
+    .note-field-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.25rem;
     }
 
     /* Note edit modal */
@@ -628,8 +673,10 @@
       <div class="modal-body">
         <label for="noteTitle">Title</label>
         <input type="text" id="noteTitle" placeholder="Note title...">
-        <label for="noteContent">Content</label>
-        <textarea id="noteContent" placeholder="Paste your script or note here..."></textarea>
+        <label for="noteCommand">Command</label>
+        <textarea id="noteCommand" placeholder="Paste your command or script here..."></textarea>
+        <label for="noteNotes" style="margin-top: 1rem;">Notes</label>
+        <textarea id="noteNotes" placeholder="Optional notes about this command..." style="min-height: 100px;"></textarea>
       </div>
       <div class="modal-footer">
         <button class="modal-cancel-btn" id="modalCancel">Cancel</button>
@@ -724,7 +771,8 @@
     const noteModal = document.getElementById('noteModal');
     const modalTitle = document.getElementById('modalTitle');
     const noteTitleInput = document.getElementById('noteTitle');
-    const noteContentInput = document.getElementById('noteContent');
+    const noteCommandInput = document.getElementById('noteCommand');
+    const noteNotesInput = document.getElementById('noteNotes');
     const copiedToast = document.getElementById('copiedToast');
 
     let editingNoteId = null;
@@ -740,7 +788,8 @@
       editingNoteId = null;
       modalTitle.textContent = 'New Note';
       noteTitleInput.value = '';
-      noteContentInput.value = '';
+      noteCommandInput.value = '';
+      noteNotesInput.value = '';
       noteModal.classList.add('visible');
       noteTitleInput.focus();
     });
@@ -759,19 +808,20 @@
     // Save note
     document.getElementById('modalSave').addEventListener('click', async () => {
       const title = noteTitleInput.value.trim() || 'Untitled';
-      const content = noteContentInput.value;
+      const command = noteCommandInput.value;
+      const notes = noteNotesInput.value;
 
       if (editingNoteId) {
         await fetch(`/api/notes/${editingNoteId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content }),
+          body: JSON.stringify({ title, command, notes }),
         });
       } else {
         await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content }),
+          body: JSON.stringify({ title, command, notes }),
         });
       }
 
@@ -802,20 +852,26 @@
         card.className = 'note-card';
         card.dataset.id = note.id;
 
-        const preview = note.content.length > 200
-          ? note.content.substring(0, 200) + '...'
-          : note.content;
+        const notesHtml = note.notes
+          ? `<div class="note-field-label">Notes</div><div class="note-notes-text">${escapeHtml(note.notes)}</div>`
+          : '';
 
         card.innerHTML = `
           <div class="note-card-header">
             <span class="note-title">${escapeHtml(note.title)}</span>
             <div class="note-actions">
-              <button class="note-action-btn copy" title="Copy content">Copy</button>
-              <button class="note-action-btn edit" title="Edit note">Edit</button>
-              <button class="note-action-btn delete" title="Delete note">Delete</button>
+              <button class="note-action-btn edit" title="Edit">Edit</button>
+              <button class="note-action-btn delete" title="Delete">Delete</button>
             </div>
           </div>
-          <div class="note-content-preview">${escapeHtml(note.content)}</div>
+          <div class="note-expanded">
+            <div class="note-field-label">Command</div>
+            <div class="note-command-row">
+              <div class="note-command-text">${escapeHtml(note.command || '')}</div>
+              <button class="copy-command-btn">Copy</button>
+            </div>
+            ${notesHtml}
+          </div>
         `;
 
         // Toggle expand
@@ -824,10 +880,10 @@
           card.classList.toggle('expanded');
         });
 
-        // Copy
-        card.querySelector('.copy').addEventListener('click', async () => {
-          await navigator.clipboard.writeText(note.content);
-          showToast('Copied to clipboard');
+        // Copy command
+        card.querySelector('.copy-command-btn').addEventListener('click', async () => {
+          await navigator.clipboard.writeText(note.command || '');
+          showToast('Command copied to clipboard');
         });
 
         // Edit
@@ -835,7 +891,8 @@
           editingNoteId = note.id;
           modalTitle.textContent = 'Edit Note';
           noteTitleInput.value = note.title;
-          noteContentInput.value = note.content;
+          noteCommandInput.value = note.command || '';
+          noteNotesInput.value = note.notes || '';
           noteModal.classList.add('visible');
           noteTitleInput.focus();
         });
