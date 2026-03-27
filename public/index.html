@@ -98,51 +98,66 @@
       border-color: #d97706;
     }
 
-    .image-upload-area {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      margin-bottom: 1.5rem;
-    }
-
-    .image-slot {
-      width: 100px;
-      height: 100px;
+    .dropzone {
       border: 2px dashed #ccc;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
       cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
       position: relative;
-      overflow: hidden;
-      transition: border-color 0.15s;
-      flex-shrink: 0;
     }
 
-    .image-slot:hover { border-color: #999; }
+    .dropzone:hover { border-color: #999; }
 
-    .image-slot input {
+    .dropzone.dragover {
+      border-color: #d97706;
+      background: #fffbeb;
+    }
+
+    .dropzone-label {
+      color: #999;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .dropzone-label strong {
+      color: #d97706;
+    }
+
+    .dropzone input[type="file"] {
       position: absolute;
       inset: 0;
       opacity: 0;
       cursor: pointer;
     }
 
-    .image-slot .plus {
-      font-size: 1.5rem;
-      color: #aaa;
-      pointer-events: none;
+    .image-thumbs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
     }
 
-    .image-slot img {
+    .image-thumbs:empty { margin-top: 0; }
+
+    .image-thumb {
+      width: 70px;
+      height: 70px;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #ddd;
+    }
+
+    .image-thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      pointer-events: none;
     }
 
-    .image-slot .remove-btn {
+    .image-thumb .thumb-remove {
       position: absolute;
       top: 2px;
       right: 2px;
@@ -150,19 +165,22 @@
       color: #fff;
       border: none;
       border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      font-size: 0.75rem;
+      width: 18px;
+      height: 18px;
+      font-size: 0.65rem;
       cursor: pointer;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
-      pointer-events: auto;
     }
 
-    .image-slot.has-image .remove-btn { display: flex; }
-    .image-slot.has-image .plus { display: none; }
-    .image-slot.has-image input { display: none; }
+    .image-thumb .thumb-remove:hover { background: #dc2626; }
+
+    .image-count {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 0.5rem;
+    }
 
     .submit-btn {
       padding: 0.65rem 2rem;
@@ -627,7 +645,12 @@
 
     <textarea id="prompt" placeholder="Enter your prompt..."></textarea>
 
-    <div class="image-upload-area" id="imageArea"></div>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/*" multiple>
+      <div class="dropzone-label">Drag & drop images here or <strong>click to browse</strong></div>
+      <div class="image-thumbs" id="imageThumbs"></div>
+      <div class="image-count" id="imageCount"></div>
+    </div>
 
     <button class="submit-btn" id="submitBtn">Submit</button>
 
@@ -696,7 +719,7 @@
     });
 
     let selectedModel = 'sonnet';
-    const imageFiles = [null, null, null, null, null];
+    let imageFiles = [];
 
     // Model selector
     document.querySelectorAll('.model-btn').forEach(btn => {
@@ -707,48 +730,75 @@
       });
     });
 
-    // Create image slots
-    const imageArea = document.getElementById('imageArea');
-    for (let i = 0; i < 5; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'image-slot';
-      slot.innerHTML = `
-        <span class="plus">+</span>
-        <input type="file" accept="image/*">
-        <button class="remove-btn" title="Remove">&times;</button>
-      `;
+    // Drag & drop image upload
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const imageThumbs = document.getElementById('imageThumbs');
+    const imageCountEl = document.getElementById('imageCount');
 
-      const input = slot.querySelector('input');
-      const removeBtn = slot.querySelector('.remove-btn');
+    function addFiles(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        imageFiles.push(file);
+        createThumb(file, imageFiles.length - 1);
+      }
+      updateImageCount();
+    }
 
-      input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        imageFiles[i] = file;
+    function createThumb(file, index) {
+      const thumb = document.createElement('div');
+      thumb.className = 'image-thumb';
+      thumb.dataset.index = index;
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const img = document.createElement('img');
-          img.src = ev.target.result;
-          const old = slot.querySelector('img');
-          if (old) old.remove();
-          slot.insertBefore(img, removeBtn);
-          slot.classList.add('has-image');
-        };
-        reader.readAsDataURL(file);
-      });
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        thumb.prepend(img);
+      };
+      reader.readAsDataURL(file);
 
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'thumb-remove';
+      removeBtn.innerHTML = '&times;';
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        imageFiles[i] = null;
-        const img = slot.querySelector('img');
-        if (img) img.remove();
-        slot.classList.remove('has-image');
-        input.value = '';
+        const idx = parseInt(thumb.dataset.index);
+        imageFiles[idx] = null;
+        thumb.remove();
+        updateImageCount();
       });
 
-      imageArea.appendChild(slot);
+      thumb.appendChild(removeBtn);
+      imageThumbs.appendChild(thumb);
     }
+
+    function updateImageCount() {
+      const count = imageFiles.filter(f => f !== null).length;
+      imageCountEl.textContent = count > 0 ? `${count} image${count !== 1 ? 's' : ''} attached` : '';
+    }
+
+    // Click to browse
+    fileInput.addEventListener('change', (e) => {
+      addFiles(e.target.files);
+      fileInput.value = '';
+    });
+
+    // Drag events
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      addFiles(e.dataTransfer.files);
+    });
 
     // Download .md
     document.getElementById('downloadBtn').addEventListener('click', () => {

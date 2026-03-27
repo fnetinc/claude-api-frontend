@@ -176,7 +176,7 @@ app.delete("/api/notes/:id", requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-app.post("/api/chat", requireAuth, upload.array("images", 5), async (req, res) => {
+app.post("/api/chat", requireAuth, upload.array("images", 50), async (req, res) => {
   try {
     const { prompt, model } = req.body;
 
