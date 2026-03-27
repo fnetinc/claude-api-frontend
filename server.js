@@ -61,7 +61,7 @@ app.post("/api/chat", upload.array("images", 5), async (req, res) => {
 
     const stream = await client.messages.stream({
       model: modelId,
-      max_tokens: 16000,
+      max_tokens: 32000,
       messages: [{ role: "user", content }],
     });
 
