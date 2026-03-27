@@ -49,6 +49,7 @@
       margin-bottom: 0.4rem;
     }
 
+    input[type="text"],
     input[type="password"] {
       width: 100%;
       padding: 0.65rem 0.85rem;
@@ -62,6 +63,7 @@
       transition: border-color 0.15s;
     }
 
+    input[type="text"]:focus,
     input[type="password"]:focus {
       outline: none;
       border-color: #d97706;
@@ -118,11 +120,14 @@
 <body>
   <div class="login-card">
     <h1>Claude API</h1>
-    <p class="subtitle">Enter your password to continue</p>
+    <p class="subtitle">Log in to continue</p>
 
     <form id="loginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="Username" autocomplete="username" autofocus>
+
       <label for="password">Password</label>
-      <input type="password" id="password" placeholder="Password" autocomplete="current-password" autofocus>
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
 
       <div class="remember-row">
         <input type="checkbox" id="remember">
@@ -132,19 +137,20 @@
       <button type="submit" class="login-btn" id="loginBtn">Log In</button>
     </form>
 
-    <div class="error-msg" id="errorMsg">Incorrect password. Please try again.</div>
+    <div class="error-msg" id="errorMsg">Incorrect username or password.</div>
   </div>
 
   <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const remember = document.getElementById('remember').checked;
       const loginBtn = document.getElementById('loginBtn');
       const errorMsg = document.getElementById('errorMsg');
 
-      if (!password) return;
+      if (!username || !password) return;
 
       loginBtn.disabled = true;
       loginBtn.textContent = 'Logging in...';
@@ -154,7 +160,7 @@
         const resp = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, remember: remember ? 'on' : 'off' }),
+          body: JSON.stringify({ username, password, remember: remember ? 'on' : 'off' }),
         });
 
         if (resp.ok) {

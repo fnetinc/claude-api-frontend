@@ -17,7 +17,8 @@ const upload = multer({
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Auth config — set LOGIN_PASSWORD env var on Railway
+// Auth config — set LOGIN_USERNAME and LOGIN_PASSWORD env vars on Railway
+const LOGIN_USERNAME = process.env.LOGIN_USERNAME || "admin";
 const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD || "changeme";
 
 // In-memory session store (tokens mapped to expiry timestamps)
@@ -65,8 +66,8 @@ function requireAuth(req, res, next) {
 
 // Login API
 app.post("/api/login", (req, res) => {
-  const { password, remember } = req.body;
-  if (password === LOGIN_PASSWORD) {
+  const { username, password, remember } = req.body;
+  if (username === LOGIN_USERNAME && password === LOGIN_PASSWORD) {
     const rememberMe = remember === "on" || remember === "true";
     const { token, maxAge } = createSession(rememberMe);
     res.cookie("session", token, {
