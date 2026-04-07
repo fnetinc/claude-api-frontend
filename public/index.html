@@ -273,22 +273,61 @@
 
     .add-note-btn:hover { background: #b45309; }
 
+    /* Sub-sections */
+    .notes-subsection {
+      margin-bottom: 1.25rem;
+    }
+
+    .notes-subsection:last-child {
+      margin-bottom: 0;
+    }
+
+    .notes-subsection-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.65rem;
+      background: #f3f3f3;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      margin-bottom: 0.6rem;
+      user-select: none;
+    }
+
+    .notes-subsection-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
     .notes-list {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.6rem;
+      min-height: 4px;
+    }
+
+    .notes-list.drag-over {
+      outline: 2px dashed #d97706;
+      outline-offset: 3px;
+      border-radius: 4px;
     }
 
     .note-card {
       border: 1px solid #ddd;
       border-radius: 6px;
       overflow: hidden;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
     }
 
-    .note-card:hover {
-      border-color: #bbb;
-    }
+    .note-card:hover { border-color: #bbb; }
+
+    .note-card.dragging { opacity: 0.35; }
+
+    .note-card.drag-above { box-shadow: 0 -2px 0 0 #d97706; }
+    .note-card.drag-below { box-shadow: 0 2px 0 0 #d97706; }
 
     .note-card-header {
       display: flex;
@@ -299,6 +338,19 @@
       border-bottom: 1px solid #eee;
       cursor: pointer;
     }
+
+    .note-drag-handle {
+      color: #bbb;
+      font-size: 0.9rem;
+      cursor: grab;
+      margin-right: 0.45rem;
+      flex-shrink: 0;
+      line-height: 1;
+      padding: 2px 3px;
+    }
+
+    .note-drag-handle:active { cursor: grabbing; }
+    .note-drag-handle:hover { color: #888; }
 
     .note-title {
       font-weight: 500;
@@ -328,20 +380,9 @@
       transition: all 0.15s;
     }
 
-    .note-action-btn:hover {
-      border-color: #999;
-      color: #333;
-    }
-
-    .note-action-btn.delete:hover {
-      border-color: #dc2626;
-      color: #dc2626;
-    }
-
-    .note-action-btn.copy:hover {
-      border-color: #16a34a;
-      color: #16a34a;
-    }
+    .note-action-btn:hover { border-color: #999; color: #333; }
+    .note-action-btn.delete:hover { border-color: #dc2626; color: #dc2626; }
+    .note-action-btn.copy:hover { border-color: #16a34a; color: #16a34a; }
 
     .note-expanded {
       display: none;
@@ -349,9 +390,7 @@
       border-top: 1px solid #eee;
     }
 
-    .note-card.expanded .note-expanded {
-      display: block;
-    }
+    .note-card.expanded .note-expanded { display: block; }
 
     .note-command-row {
       display: flex;
@@ -404,6 +443,14 @@
       margin-bottom: 0.25rem;
     }
 
+    .notes-empty {
+      text-align: center;
+      color: #bbb;
+      font-size: 0.8rem;
+      padding: 0.75rem 0;
+      font-style: italic;
+    }
+
     /* Note edit modal */
     .modal-overlay {
       display: none;
@@ -416,9 +463,7 @@
       padding: 1rem;
     }
 
-    .modal-overlay.visible {
-      display: flex;
-    }
+    .modal-overlay.visible { display: flex; }
 
     .modal {
       background: #fff;
@@ -469,7 +514,8 @@
       margin-bottom: 0.3rem;
     }
 
-    .modal-body input[type="text"] {
+    .modal-body input[type="text"],
+    .modal-body select {
       width: 100%;
       padding: 0.55rem 0.75rem;
       border: 1px solid #ccc;
@@ -477,10 +523,12 @@
       font-size: 0.9rem;
       font-family: inherit;
       color: #1a1a1a;
+      background: #fff;
       margin-bottom: 1rem;
     }
 
-    .modal-body input[type="text"]:focus {
+    .modal-body input[type="text"]:focus,
+    .modal-body select:focus {
       outline: none;
       border-color: #d97706;
     }
@@ -521,13 +569,6 @@
     }
 
     .modal-save-btn:hover { background: #b45309; }
-
-    .notes-empty {
-      text-align: center;
-      color: #aaa;
-      font-size: 0.85rem;
-      padding: 1.5rem 0;
-    }
 
     .copied-toast {
       position: fixed;
@@ -685,8 +726,25 @@
         <div class="notes-toolbar">
           <button class="add-note-btn" id="addNoteBtn">+ New Note</button>
         </div>
-        <div class="notes-list" id="notesList">
-          <div class="notes-empty" id="notesEmpty">No saved notes yet</div>
+
+        <!-- Creative Copy sub-section -->
+        <div class="notes-subsection">
+          <div class="notes-subsection-header">
+            <span class="notes-subsection-title">Creative Copy</span>
+          </div>
+          <div class="notes-list" id="listCreativeCopy" data-section="creative_copy">
+            <div class="notes-empty">No notes yet</div>
+          </div>
+        </div>
+
+        <!-- Images sub-section -->
+        <div class="notes-subsection">
+          <div class="notes-subsection-header">
+            <span class="notes-subsection-title">Images</span>
+          </div>
+          <div class="notes-list" id="listImages" data-section="images">
+            <div class="notes-empty">No notes yet</div>
+          </div>
         </div>
       </div>
     </div>
@@ -721,6 +779,11 @@
       <div class="modal-body">
         <label for="noteTitle">Title</label>
         <input type="text" id="noteTitle" placeholder="Note title...">
+        <label for="noteSection">Section</label>
+        <select id="noteSection">
+          <option value="creative_copy">Creative Copy</option>
+          <option value="images">Images</option>
+        </select>
         <label for="noteCommand">Command</label>
         <textarea id="noteCommand" placeholder="Paste your command or script here..."></textarea>
         <label for="noteNotes" style="margin-top: 1rem;">Notes</label>
@@ -871,11 +934,10 @@
     const notesToggle = document.getElementById('notesToggle');
     const notesBody = document.getElementById('notesBody');
     const toggleArrow = document.getElementById('toggleArrow');
-    const notesList = document.getElementById('notesList');
-    const notesEmpty = document.getElementById('notesEmpty');
     const noteModal = document.getElementById('noteModal');
     const modalTitle = document.getElementById('modalTitle');
     const noteTitleInput = document.getElementById('noteTitle');
+    const noteSectionInput = document.getElementById('noteSection');
     const noteCommandInput = document.getElementById('noteCommand');
     const noteNotesInput = document.getElementById('noteNotes');
     const copiedToast = document.getElementById('copiedToast');
@@ -893,6 +955,7 @@
       editingNoteId = null;
       modalTitle.textContent = 'New Note';
       noteTitleInput.value = '';
+      noteSectionInput.value = 'creative_copy';
       noteCommandInput.value = '';
       noteNotesInput.value = '';
       noteModal.classList.add('visible');
@@ -913,6 +976,7 @@
     // Save note
     document.getElementById('modalSave').addEventListener('click', async () => {
       const title = noteTitleInput.value.trim() || 'Untitled';
+      const section = noteSectionInput.value;
       const command = noteCommandInput.value;
       const notes = noteNotesInput.value;
 
@@ -920,13 +984,13 @@
         await fetch(`/api/notes/${editingNoteId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, command, notes }),
+          body: JSON.stringify({ title, section, command, notes }),
         });
       } else {
         await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, command, notes }),
+          body: JSON.stringify({ title, section, command, notes }),
         });
       }
 
@@ -941,84 +1005,202 @@
       setTimeout(() => copiedToast.classList.remove('visible'), 1500);
     }
 
-    // Render notes
-    function renderNotes(notes) {
-      // Clear existing cards
-      notesList.querySelectorAll('.note-card').forEach(c => c.remove());
-
-      if (notes.length === 0) {
-        notesEmpty.style.display = 'block';
-        return;
-      }
-      notesEmpty.style.display = 'none';
-
-      notes.forEach(note => {
-        const card = document.createElement('div');
-        card.className = 'note-card';
-        card.dataset.id = note.id;
-
-        const notesHtml = note.notes
-          ? `<div class="note-field-label">Notes</div><div class="note-notes-text">${escapeHtml(note.notes)}</div>`
-          : '';
-
-        card.innerHTML = `
-          <div class="note-card-header">
-            <span class="note-title">${escapeHtml(note.title)}</span>
-            <div class="note-actions">
-              <button class="note-action-btn edit" title="Edit">Edit</button>
-              <button class="note-action-btn delete" title="Delete">Delete</button>
-            </div>
-          </div>
-          <div class="note-expanded">
-            ${notesHtml}
-            ${notesHtml ? '<div style="margin-bottom: 0.5rem;"></div>' : ''}
-            <div class="note-field-label">Command</div>
-            <div class="note-command-row">
-              <div class="note-command-text">${escapeHtml(note.command || '')}</div>
-              <button class="copy-command-btn">Copy</button>
-            </div>
-          </div>
-        `;
-
-        // Toggle expand
-        card.querySelector('.note-card-header').addEventListener('click', (e) => {
-          if (e.target.closest('.note-actions')) return;
-          card.classList.toggle('expanded');
-        });
-
-        // Copy command
-        card.querySelector('.copy-command-btn').addEventListener('click', async () => {
-          await navigator.clipboard.writeText(note.command || '');
-          showToast('Command copied to clipboard');
-        });
-
-        // Edit
-        card.querySelector('.edit').addEventListener('click', () => {
-          editingNoteId = note.id;
-          modalTitle.textContent = 'Edit Note';
-          noteTitleInput.value = note.title;
-          noteCommandInput.value = note.command || '';
-          noteNotesInput.value = note.notes || '';
-          noteModal.classList.add('visible');
-          noteTitleInput.focus();
-        });
-
-        // Delete
-        card.querySelector('.delete').addEventListener('click', async () => {
-          if (!confirm(`Delete "${note.title}"?`)) return;
-          await fetch(`/api/notes/${note.id}`, { method: 'DELETE' });
-          loadNotes();
-        });
-
-        notesList.appendChild(card);
-      });
-    }
-
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
     }
+
+    // ==================== DRAG & DROP REORDER ====================
+    let dragSrcCard = null;
+
+    function makeDraggable(card) {
+      card.setAttribute('draggable', 'true');
+
+      card.addEventListener('dragstart', (e) => {
+        dragSrcCard = card;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', card.dataset.id);
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.note-card').forEach(c => {
+          c.classList.remove('drag-above', 'drag-below');
+        });
+        document.querySelectorAll('.notes-list').forEach(l => l.classList.remove('drag-over'));
+        dragSrcCard = null;
+      });
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!dragSrcCard || dragSrcCard === card) return;
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.note-card').forEach(c => c.classList.remove('drag-above', 'drag-below'));
+        const rect = card.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        if (e.clientY < mid) {
+          card.classList.add('drag-above');
+        } else {
+          card.classList.add('drag-below');
+        }
+      });
+
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('drag-above', 'drag-below');
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!dragSrcCard || dragSrcCard === card) return;
+        const list = card.closest('.notes-list');
+        const rect = card.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        if (e.clientY < mid) {
+          list.insertBefore(dragSrcCard, card);
+        } else {
+          list.insertBefore(dragSrcCard, card.nextSibling);
+        }
+        card.classList.remove('drag-above', 'drag-below');
+        saveOrder(list);
+      });
+    }
+
+    // Wire up list containers so dropping onto empty space works
+    function setupListDrop(list) {
+      list.addEventListener('dragover', (e) => {
+        // Only if hovering on the list itself, not a card
+        if (e.target === list) {
+          e.preventDefault();
+          list.classList.add('drag-over');
+        }
+      });
+
+      list.addEventListener('dragleave', (e) => {
+        if (e.target === list) list.classList.remove('drag-over');
+      });
+
+      list.addEventListener('drop', (e) => {
+        if (e.target !== list) return;
+        e.preventDefault();
+        list.classList.remove('drag-over');
+        if (!dragSrcCard) return;
+        list.appendChild(dragSrcCard);
+        saveOrder(list);
+      });
+    }
+
+    async function saveOrder(list) {
+      const cards = list.querySelectorAll('.note-card');
+      const orders = Array.from(cards).map((c, i) => ({
+        id: parseInt(c.dataset.id),
+        sort_order: i + 1,
+      }));
+      await fetch('/api/notes/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders }),
+      });
+    }
+
+    // Render notes into their sub-section lists
+    function renderNotes(notes) {
+      const lists = {
+        creative_copy: document.getElementById('listCreativeCopy'),
+        images: document.getElementById('listImages'),
+      };
+
+      // Clear existing cards (keep empty placeholder)
+      for (const list of Object.values(lists)) {
+        list.querySelectorAll('.note-card').forEach(c => c.remove());
+        const empty = list.querySelector('.notes-empty');
+        if (empty) empty.style.display = 'block';
+      }
+
+      const bySection = { creative_copy: [], images: [] };
+      notes.forEach(n => {
+        const sec = n.section === 'images' ? 'images' : 'creative_copy';
+        bySection[sec].push(n);
+      });
+
+      for (const [section, sectionNotes] of Object.entries(bySection)) {
+        const list = lists[section];
+        const empty = list.querySelector('.notes-empty');
+        if (sectionNotes.length === 0) {
+          if (empty) empty.style.display = 'block';
+          continue;
+        }
+        if (empty) empty.style.display = 'none';
+
+        sectionNotes.forEach(note => {
+          const card = document.createElement('div');
+          card.className = 'note-card';
+          card.dataset.id = note.id;
+
+          const notesHtml = note.notes
+            ? `<div class="note-field-label">Notes</div><div class="note-notes-text">${escapeHtml(note.notes)}</div>`
+            : '';
+
+          card.innerHTML = `
+            <div class="note-card-header">
+              <span class="note-drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+              <span class="note-title">${escapeHtml(note.title)}</span>
+              <div class="note-actions">
+                <button class="note-action-btn edit" title="Edit">Edit</button>
+                <button class="note-action-btn delete" title="Delete">Delete</button>
+              </div>
+            </div>
+            <div class="note-expanded">
+              ${notesHtml}
+              ${notesHtml ? '<div style="margin-bottom: 0.5rem;"></div>' : ''}
+              <div class="note-field-label">Command</div>
+              <div class="note-command-row">
+                <div class="note-command-text">${escapeHtml(note.command || '')}</div>
+                <button class="copy-command-btn">Copy</button>
+              </div>
+            </div>
+          `;
+
+          // Toggle expand (not on drag handle or actions)
+          card.querySelector('.note-card-header').addEventListener('click', (e) => {
+            if (e.target.closest('.note-actions') || e.target.closest('.note-drag-handle')) return;
+            card.classList.toggle('expanded');
+          });
+
+          // Copy command
+          card.querySelector('.copy-command-btn').addEventListener('click', async () => {
+            await navigator.clipboard.writeText(note.command || '');
+            showToast('Command copied to clipboard');
+          });
+
+          // Edit
+          card.querySelector('.edit').addEventListener('click', () => {
+            editingNoteId = note.id;
+            modalTitle.textContent = 'Edit Note';
+            noteTitleInput.value = note.title;
+            noteSectionInput.value = note.section === 'images' ? 'images' : 'creative_copy';
+            noteCommandInput.value = note.command || '';
+            noteNotesInput.value = note.notes || '';
+            noteModal.classList.add('visible');
+            noteTitleInput.focus();
+          });
+
+          // Delete
+          card.querySelector('.delete').addEventListener('click', async () => {
+            if (!confirm(`Delete "${note.title}"?`)) return;
+            await fetch(`/api/notes/${note.id}`, { method: 'DELETE' });
+            loadNotes();
+          });
+
+          makeDraggable(card);
+          list.appendChild(card);
+        });
+      }
+    }
+
+    // Set up drop zones on page load
+    document.querySelectorAll('.notes-list').forEach(setupListDrop);
 
     // Load notes from API
     async function loadNotes() {

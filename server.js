@@ -29,17 +29,27 @@ db.exec(`
   )
 `);
 
-// Migrate: add command/notes columns if upgrading from old schema
+// Migrate: add columns if upgrading from old schema
 try {
   db.exec(`ALTER TABLE notes ADD COLUMN command TEXT NOT NULL DEFAULT ''`);
 } catch (e) { /* column already exists */ }
 try {
   db.exec(`ALTER TABLE notes ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
 } catch (e) { /* column already exists */ }
+try {
+  db.exec(`ALTER TABLE notes ADD COLUMN section TEXT NOT NULL DEFAULT 'creative_copy'`);
+} catch (e) { /* column already exists */ }
+try {
+  db.exec(`ALTER TABLE notes ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0`);
+} catch (e) { /* column already exists */ }
 // Migrate old content column to command if it exists
 try {
   db.exec(`UPDATE notes SET command = content WHERE command = '' AND content != ''`);
 } catch (e) { /* no content column */ }
+// Initialize sort_order for existing notes that have none
+try {
+  db.exec(`UPDATE notes SET sort_order = id WHERE sort_order = 0`);
+} catch (e) { /* ignore */ }
 
 const app = express();
 const upload = multer({
@@ -143,27 +153,30 @@ app.use((req, res, next) => {
 
 // --- Notes CRUD API ---
 app.get("/api/notes", requireAuth, (req, res) => {
-  const notes = db.prepare("SELECT * FROM notes ORDER BY updated_at DESC").all();
+  const notes = db.prepare("SELECT * FROM notes ORDER BY section, sort_order ASC").all();
   res.json(notes);
 });
 
 app.post("/api/notes", requireAuth, (req, res) => {
-  const { title, command, notes } = req.body;
-  const result = db.prepare("INSERT INTO notes (title, command, notes) VALUES (?, ?, ?)").run(
-    title || "Untitled",
-    command || "",
-    notes || ""
-  );
+  const { title, command, notes, section } = req.body;
+  const validSection = section === "images" ? "images" : "creative_copy";
+  // Place new note at end of its section
+  const maxOrder = db.prepare("SELECT MAX(sort_order) as m FROM notes WHERE section = ?").get(validSection);
+  const sortOrder = (maxOrder.m || 0) + 1;
+  const result = db.prepare(
+    "INSERT INTO notes (title, command, notes, section, sort_order) VALUES (?, ?, ?, ?, ?)"
+  ).run(title || "Untitled", command || "", notes || "", validSection, sortOrder);
   const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(result.lastInsertRowid);
   res.json(note);
 });
 
 app.put("/api/notes/:id", requireAuth, (req, res) => {
-  const { title, command, notes } = req.body;
+  const { title, command, notes, section } = req.body;
   const { id } = req.params;
-  db.prepare("UPDATE notes SET title = ?, command = ?, notes = ?, updated_at = datetime('now') WHERE id = ?").run(
-    title, command, notes, id
-  );
+  const validSection = section === "images" ? "images" : "creative_copy";
+  db.prepare(
+    "UPDATE notes SET title = ?, command = ?, notes = ?, section = ?, updated_at = datetime('now') WHERE id = ?"
+  ).run(title, command, notes, validSection, id);
   const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(id);
   if (!note) return res.status(404).json({ error: "Note not found" });
   res.json(note);
@@ -173,6 +186,20 @@ app.delete("/api/notes/:id", requireAuth, (req, res) => {
   const { id } = req.params;
   const result = db.prepare("DELETE FROM notes WHERE id = ?").run(id);
   if (result.changes === 0) return res.status(404).json({ error: "Note not found" });
+  res.json({ success: true });
+});
+
+// Reorder notes within a section
+app.post("/api/notes/reorder", requireAuth, (req, res) => {
+  const { orders } = req.body; // [{ id, sort_order }]
+  if (!Array.isArray(orders)) return res.status(400).json({ error: "Invalid payload" });
+  const update = db.prepare("UPDATE notes SET sort_order = ? WHERE id = ?");
+  const tx = db.transaction(() => {
+    for (const { id, sort_order } of orders) {
+      update.run(sort_order, id);
+    }
+  });
+  tx();
   res.json({ success: true });
 });
 
