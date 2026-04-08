@@ -237,6 +237,19 @@ app.post("/api/chat", requireAuth, upload.array("images", 50), async (req, res) 
       }
     }
 
+    // Add uploaded text / HTML files as text content blocks
+    if (req.body.textFilesData) {
+      try {
+        const textFiles = JSON.parse(req.body.textFilesData);
+        for (const { name, content: fileContent } of textFiles) {
+          content.push({
+            type: "text",
+            text: `--- File: ${name} ---\n${fileContent}\n--- End of ${name} ---`,
+          });
+        }
+      } catch (e) { /* malformed JSON, skip */ }
+    }
+
     content.push({ type: "text", text: prompt });
 
     // Use streaming for long responses

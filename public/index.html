@@ -183,6 +183,81 @@
       margin-top: 0.5rem;
     }
 
+    /* Text / HTML file upload */
+    .textfile-dropzone {
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+    }
+
+    .textfile-dropzone:hover { border-color: #999; }
+
+    .textfile-dropzone.dragover {
+      border-color: #d97706;
+      background: #fffbeb;
+    }
+
+    .textfile-dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .textfile-dropzone-label {
+      color: #999;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .textfile-dropzone-label strong { color: #d97706; }
+
+    .textfile-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
+    }
+
+    .textfile-chips:empty { margin-top: 0; }
+
+    .textfile-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 0.2rem 0.6rem 0.2rem 0.75rem;
+      font-size: 0.78rem;
+      color: #444;
+      max-width: 220px;
+    }
+
+    .textfile-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .textfile-chip-remove {
+      background: none;
+      border: none;
+      color: #999;
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .textfile-chip-remove:hover { color: #dc2626; }
+
     .submit-btn {
       padding: 0.65rem 2rem;
       background: #d97706;
@@ -714,6 +789,13 @@
       <div class="image-count" id="imageCount"></div>
     </div>
 
+    <!-- Text / HTML file upload (optional) -->
+    <div class="textfile-dropzone" id="textfileDropzone">
+      <input type="file" id="textfileInput" accept=".txt,.html,.htm" multiple>
+      <div class="textfile-dropzone-label">Optionally attach <strong>.txt or .html</strong> files — contents will be sent with your prompt</div>
+      <div class="textfile-chips" id="textfileChips"></div>
+    </div>
+
     <button class="submit-btn" id="submitBtn">Submit</button>
     <button class="reset-btn" id="resetBtn">Reset</button>
 
@@ -816,6 +898,8 @@
       document.getElementById('responseWrapper').classList.remove('visible');
       document.getElementById('response').textContent = '';
       document.getElementById('fileInput').value = '';
+      textFiles = [];
+      document.getElementById('textfileChips').innerHTML = '';
     });
 
     let selectedModel = 'sonnet';
@@ -898,6 +982,63 @@
       e.preventDefault();
       dropzone.classList.remove('dragover');
       addFiles(e.dataTransfer.files);
+    });
+
+    // ==================== TEXT / HTML FILE UPLOAD ====================
+    const textfileDropzone = document.getElementById('textfileDropzone');
+    const textfileInput = document.getElementById('textfileInput');
+    const textfileChips = document.getElementById('textfileChips');
+    let textFiles = []; // [{ name, content }]
+
+    function readTextFiles(files) {
+      for (const file of files) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['txt', 'html', 'htm'].includes(ext)) continue;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          textFiles.push({ name: file.name, content: ev.target.result });
+          addTextChip(file.name, textFiles.length - 1);
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function addTextChip(name, index) {
+      const chip = document.createElement('div');
+      chip.className = 'textfile-chip';
+      chip.dataset.index = index;
+      chip.innerHTML = `<span title="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'textfile-chip-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Remove';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        textFiles[parseInt(chip.dataset.index)] = null;
+        chip.remove();
+      });
+      chip.appendChild(removeBtn);
+      textfileChips.appendChild(chip);
+    }
+
+    textfileInput.addEventListener('change', (e) => {
+      readTextFiles(e.target.files);
+      textfileInput.value = '';
+    });
+
+    textfileDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      textfileDropzone.classList.add('dragover');
+    });
+
+    textfileDropzone.addEventListener('dragleave', () => {
+      textfileDropzone.classList.remove('dragover');
+    });
+
+    textfileDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      textfileDropzone.classList.remove('dragover');
+      readTextFiles(e.dataTransfer.files);
     });
 
     // Copy response
@@ -1252,6 +1393,11 @@
 
       for (const file of imageFiles) {
         if (file) formData.append('images', file);
+      }
+
+      const activeTextFiles = textFiles.filter(f => f !== null);
+      if (activeTextFiles.length > 0) {
+        formData.append('textFilesData', JSON.stringify(activeTextFiles));
       }
 
       try {
