@@ -203,6 +203,21 @@ app.post("/api/notes/reorder", requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// Detect image media type from magic bytes
+function detectImageType(buffer) {
+  if (!buffer || buffer.length < 4) return null;
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return "image/png";
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return "image/jpeg";
+  // GIF: 47 49 46 38
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) return "image/gif";
+  // WebP: RIFF....WEBP
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+      buffer.length >= 12 && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return "image/webp";
+  return null;
+}
+
 app.post("/api/chat", requireAuth, upload.array("images", 50), async (req, res) => {
   try {
     const { prompt, model } = req.body;
@@ -220,7 +235,9 @@ app.post("/api/chat", requireAuth, upload.array("images", 50), async (req, res) 
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         const base64 = file.buffer.toString("base64");
-        const mediaType = file.mimetype;
+
+        // Detect actual media type from magic bytes — don't trust browser MIME
+        const mediaType = detectImageType(file.buffer) || file.mimetype;
 
         if (!mediaType.startsWith("image/")) {
           continue;
