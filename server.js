@@ -159,7 +159,8 @@ app.get("/api/notes", requireAuth, (req, res) => {
 
 app.post("/api/notes", requireAuth, (req, res) => {
   const { title, command, notes, section } = req.body;
-  const validSection = section === "images" ? "images" : "creative_copy";
+  const validSections = ["creative_copy", "images", "landing_pages"];
+  const validSection = validSections.includes(section) ? section : "creative_copy";
   // Place new note at end of its section
   const maxOrder = db.prepare("SELECT MAX(sort_order) as m FROM notes WHERE section = ?").get(validSection);
   const sortOrder = (maxOrder.m || 0) + 1;
@@ -173,7 +174,8 @@ app.post("/api/notes", requireAuth, (req, res) => {
 app.put("/api/notes/:id", requireAuth, (req, res) => {
   const { title, command, notes, section } = req.body;
   const { id } = req.params;
-  const validSection = section === "images" ? "images" : "creative_copy";
+  const validSections = ["creative_copy", "images", "landing_pages"];
+  const validSection = validSections.includes(section) ? section : "creative_copy";
   db.prepare(
     "UPDATE notes SET title = ?, command = ?, notes = ?, section = ?, updated_at = datetime('now') WHERE id = ?"
   ).run(title, command, notes, validSection, id);
